@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Turnstile Test</title>
+
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    ></script>
+  </head>
+
+  <body>
+    <div
+      class="cf-turnstile"
+      data-sitekey="0x4AAAAAAESm9FmhNwd9Trs6"
+      data-callback="onTurnstileSuccess"
+    ></div>
+
+    <script>
+      function onTurnstileSuccess(token) {
+        console.log('TURNSTILE TOKEN:', token);
+
+        // عشان تشوفه بسهولة على الصفحة
+        document.body.insertAdjacentHTML('beforeend', `<pre id="token"></pre>`);
+
+        document.getElementById('token').textContent = token;
+      }
+    </script>
+  </body>
+</html>

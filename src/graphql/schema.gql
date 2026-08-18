@@ -1,0 +1,72 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Order {
+  id: ID!
+  total: Float!
+  status: String!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  role: UserRole!
+  orders: [Order!]!
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+type PaginationMeta {
+  page: Int!
+  limit: Int!
+  totalCount: Int!
+}
+
+type UsersResponse {
+  users: [User!]!
+  meta: PaginationMeta!
+}
+
+type AuthPayload {
+  user: User!
+}
+
+type Query {
+  orders: [Order!]!
+  user: User!
+  users(filter: UserFilterInput!): UsersResponse!
+}
+
+input UserFilterInput {
+  page: Int! = 1
+  limit: Int! = 10
+  role: UserRole
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  signup(input: SignupInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+}
+
+input CreateUserInput {
+  name: String!
+  email: String!
+}
+
+input SignupInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+  turnstileToken: String!
+}
