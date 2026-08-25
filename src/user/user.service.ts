@@ -6,13 +6,18 @@ import { RedisService } from 'src/redis/redis.service';
 import { GraphQLContext } from 'src/graphql/graphql-context';
 import { UserFilterInput } from './graphql/user-filter.input';
 import { UsersResponse } from './graphql/users-response.type';
-import { UserMapper } from './mappers/user.mapper';
+import { InjectMapper } from '@automapper/nestjs';
+import { Mapper } from '@automapper/core';
+import { User as MongoUser } from './schemas/user.schema';
+import { User as GraphQLUser } from './graphql/user.type';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly cacheService: RedisService,
+    @InjectMapper()
+    private readonly mapper: Mapper,
   ) {}
 
   async create(userData: Partial<User>): Promise<UserDocument> {
@@ -43,9 +48,11 @@ export class UserService {
   async getUsers(filter: UserFilterInput): Promise<UsersResponse> {
     const { users, totalCount } =
       await this.userRepository.findAllUsers(filter);
-    return {
-      users: users.map((user) => UserMapper.toGraphQL(user)),
 
+    const mappedUsers = this.mapper.mapArray(users, MongoUser, GraphQLUser);
+
+    return {
+      users: mappedUsers,
       meta: {
         totalCount,
         page: filter.page,

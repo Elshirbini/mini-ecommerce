@@ -8,6 +8,7 @@ import { UserRepository } from './user.repository';
 import { RedisModule } from 'src/redis/redis.module';
 import { CommonModule } from 'src/common/common.module';
 import { JwtModule } from '@nestjs/jwt';
+import { UserProfile } from './mappers/user.profile';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { JwtModule } from '@nestjs/jwt';
     CommonModule,
     JwtModule,
   ],
-  providers: [UserResolver, UserService, UserRepository],
+  providers: [UserResolver, UserService, UserRepository, UserProfile],
   exports: [UserService],
 })
 export class UserModule {}

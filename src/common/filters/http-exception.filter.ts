@@ -29,7 +29,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
         typeof exceptionResponse === 'object' &&
         exceptionResponse !== null
       ) {
-        message = exceptionResponse['message'] || exceptionResponse;
+        const response = exceptionResponse as {
+          message?: string | string[];
+        };
+
+        if (Array.isArray(response.message)) {
+          message = response.message.join(', ');
+        } else {
+          message = response.message ?? 'Internal server error';
+        }
       }
     } else {
       message = exception.message || 'Internal server error';

@@ -67,7 +67,7 @@ async function bootstrap() {
     .getHttpAdapter()
     .getInstance()
     .addHook('onRequest', (req: any, res: any, next) => {
-      const start = Date.now();
+      // const start = Date.now();
       const requestId = crypto.randomUUID();
 
       req.requestId = requestId;
@@ -82,20 +82,20 @@ async function bootstrap() {
 
       res.raw.setHeader('x-request-id', requestId);
 
-      // ✅ باقي الـ requests
-      res.raw.on('finish', () => {
-        logger.log({
-          type: 'http_request',
-          method: req.method,
-          url: req.url,
-          statusCode: res.raw.statusCode,
-          durationMs: Date.now() - start,
-          ip: req.ip || req.headers['x-forwarded-for'],
-          userAgent: req.headers['user-agent'],
-          requestId,
-          userId: req.userId ?? null,
-        });
-      });
+      // // ✅ باقي الـ requests
+      // res.raw.on('finish', () => {
+      //   logger.log({
+      //     type: 'http_request',
+      //     method: req.method,
+      //     url: req.url,
+      //     statusCode: res.raw.statusCode,
+      //     durationMs: Date.now() - start,
+      //     ip: req.ip || req.headers['x-forwarded-for'],
+      //     userAgent: req.headers['user-agent'],
+      //     requestId,
+      //     userId: req.userId ?? null,
+      //   });
+      // });
 
       next();
     });

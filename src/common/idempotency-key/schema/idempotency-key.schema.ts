@@ -6,19 +6,19 @@ export type IdempotencyKeyDocument = IdempotencyKey & Document;
 @Schema({ timestamps: true })
 export class IdempotencyKey {
   @Prop({ required: true, unique: true })
-  key: string;
+  key!: string;
 
   @Prop({ required: true })
-  endpoint: string;
+  endpoint!: string;
 
   @Prop({ required: true })
-  requestHash: string;
+  requestHash!: string;
 
   @Prop({ type: Object })
   response?: Record<string, any>;
 
   @Prop({ type: Number, required: true })
-  statusCode: number;
+  statusCode!: number;
 }
 
 export const IdempotencyKeySchema =
