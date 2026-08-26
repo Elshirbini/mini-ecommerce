@@ -12,6 +12,7 @@ type User {
   id: ID!
   name: String!
   email: String!
+  imageUrl: String
   role: UserRole!
   orders: [Order!]!
 }
@@ -50,7 +51,7 @@ input UserFilterInput {
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
-  signup(input: SignupInput!): AuthPayload!
+  signup(input: SignupInput!, file: Upload): AuthPayload!
   login(input: LoginInput!): AuthPayload!
 }
 
@@ -64,6 +65,9 @@ input SignupInput {
   email: String!
   password: String!
 }
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
 
 input LoginInput {
   email: String!

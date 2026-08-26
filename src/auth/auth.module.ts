@@ -6,9 +6,16 @@ import { UserModule } from 'src/user/user.module';
 import { TurnstileModule } from 'src/common/security/turnstile/turnstile.module';
 import { CommonModule } from 'src/common/common.module';
 import { TokenService } from './services/token.service';
+import { CloudflareModule } from 'src/cloudflare/cloudflare.module';
 
 @Module({
-  imports: [UserModule, TurnstileModule, CommonModule, JwtModule],
+  imports: [
+    UserModule,
+    TurnstileModule,
+    CommonModule,
+    JwtModule,
+    CloudflareModule,
+  ],
   providers: [AuthService, TokenService, AuthResolver],
 })
 export class AuthModule {}

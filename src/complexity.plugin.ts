@@ -7,6 +7,7 @@ import {
   getComplexity,
   simpleEstimator,
 } from 'graphql-query-complexity';
+import { winstonLogger } from './common/winston-logger';
 
 @Plugin()
 export class ComplexityPlugin implements ApolloServerPlugin {
@@ -28,12 +29,17 @@ export class ComplexityPlugin implements ApolloServerPlugin {
             simpleEstimator({ defaultComplexity: 1 }),
           ],
         });
+
+        if (request.operationName === 'IntrospectionQuery') {
+          return;
+        }
+
         if (complexity > maxComplexity) {
           throw new GraphQLError(
             `Query is too complex: ${complexity}. Maximum allowed complexity: ${maxComplexity}`,
           );
         }
-        console.log('Query Complexity:', complexity);
+        winstonLogger.log(`Query Complexity: ${complexity}`);
       },
     };
   }

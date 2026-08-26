@@ -20,6 +20,13 @@ export class User {
   @Prop({ required: true })
   password!: string;
 
+  @Prop()
+  imageKey!: string;
+
+  @Prop()
+  @AutoMap()
+  imageUrl?: string;
+
   @Prop({ required: true, enum: UserRole, default: UserRole.USER })
   @AutoMap()
   role!: UserRole;

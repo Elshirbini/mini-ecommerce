@@ -12,14 +12,14 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import fastifyCookie from '@fastify/cookie';
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import fastifyHelmet from '@fastify/helmet';
 import * as multipart from '@fastify/multipart';
 import fastifyCompress from '@fastify/compress';
-import { SanitizePipe } from './common/pipes/sanitize.pipe';
 import { winstonLogger } from './common/winston-logger';
 import * as crypto from 'crypto';
 import blockedAt from 'blocked-at';
+import processRequest from 'graphql-upload/processRequest.mjs';
 
 type BlockedAtFn = (
   onBlock: (time: number, stack: unknown) => void,
@@ -29,31 +29,25 @@ type BlockedAtFn = (
 async function bootstrap() {
   (blockedAt as unknown as BlockedAtFn)(
     (time, stack) => {
-      console.log(`BLOCKED FOR ${time}ms`);
-      console.log(stack);
+      winstonLogger.log(`BLOCKED FOR ${time}ms`);
+      winstonLogger.log(stack);
     },
     { threshold: 1000 },
   );
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ trustProxy: true, bodyLimit: 2 * 1024 * 1024 }),
+    new FastifyAdapter({ trustProxy: true, bodyLimit: 10 * 1024 * 1024 }),
     {
       logger: winstonLogger,
     },
   );
-  const logger = new Logger('HTTP');
 
   app.enableCors({
     origin: [
       'http://localhost:5173',
       'http://localhost:3000',
-      'https://ma3aak.com',
-      'https://www.ma3aak.com',
-      'https://admin.ma3aak.com',
-      'https://teachers-website.vercel.app',
-      'https://teachers-platform-five.vercel.app',
-      'https://ma3aak-users.vercel.app',
-      `${process.env.R2_PUBLIC_DOMAIN}`,
+      'https://studio.apollographql.com',
+      'https://sandbox.embed.apollographql.com',
     ],
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
     credentials: true,
@@ -63,11 +57,31 @@ async function bootstrap() {
     global: true,
   });
 
+  const fastify = app.getHttpAdapter().getInstance();
+
+  fastify.addContentTypeParser(
+    'multipart/form-data',
+    (_request, _payload, done) => {
+      done(null);
+    },
+  );
+  fastify.addHook('preValidation', async (request, reply) => {
+    const contentType = request.headers['content-type'];
+
+    if (!contentType?.startsWith('multipart/form-data')) {
+      return;
+    }
+
+    request.body = await processRequest(request.raw, reply.raw, {
+      maxFileSize: 10 * 1024 * 1024,
+      maxFiles: 5,
+    });
+  });
+
   app
     .getHttpAdapter()
     .getInstance()
     .addHook('onRequest', (req: any, res: any, next) => {
-      // const start = Date.now();
       const requestId = crypto.randomUUID();
 
       req.requestId = requestId;
@@ -82,29 +96,14 @@ async function bootstrap() {
 
       res.raw.setHeader('x-request-id', requestId);
 
-      // // ✅ باقي الـ requests
-      // res.raw.on('finish', () => {
-      //   logger.log({
-      //     type: 'http_request',
-      //     method: req.method,
-      //     url: req.url,
-      //     statusCode: res.raw.statusCode,
-      //     durationMs: Date.now() - start,
-      //     ip: req.ip || req.headers['x-forwarded-for'],
-      //     userAgent: req.headers['user-agent'],
-      //     requestId,
-      //     userId: req.userId ?? null,
-      //   });
-      // });
-
       next();
     });
 
-  await app.register(multipart as any, {
-    limits: {
-      fileSize: 1000 * 1024 * 1024,
-    },
-  });
+  // await app.register(multipart as any, {
+  //   limits: {
+  //     fileSize: 1000 * 1024 * 1024,
+  //   },
+  // });
 
   await app.register(
     fastifyHelmet as any,
@@ -113,31 +112,51 @@ async function bootstrap() {
         directives: {
           frameSrc: [
             "'self'",
-            'https://oppwa.com',
-            'https://*.oppwa.com',
-            'https://*.visa.com',
-            'https://*.mastercard.com',
-            'https://*.3dsecure.io',
             'https://*.cardinalcommerce.com',
+
+            // Apollo Sandbox
+            'https://sandbox.embed.apollographql.com',
+            'https://explorer.embed.apollographql.com',
           ],
+
           scriptSrc: [
             "'self'",
             "'unsafe-inline'",
-            'https://oppwa.com',
-            'https://*.oppwa.com',
+
+            // Apollo Sandbox
+            'https://embeddable-sandbox.cdn.apollographql.com',
+            'https://apollo-server-landing-page.cdn.apollographql.com',
           ],
+
           styleSrc: [
             "'self'",
             "'unsafe-inline'",
-            'https://oppwa.com',
-            'https://*.oppwa.com',
+
+            'https://fonts.googleapis.com',
+            'https://apollo-server-landing-page.cdn.apollographql.com',
+            'https://embeddable-sandbox.cdn.apollographql.com',
           ],
-          connectSrc: ["'self'", 'https://oppwa.com', 'https://*.oppwa.com'],
+
+          fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
+
           imgSrc: [
             "'self'",
             'data:',
-            'https://oppwa.com',
-            'https://*.oppwa.com',
+
+            'https://apollo-server-landing-page.cdn.apollographql.com',
+          ],
+
+          manifestSrc: [
+            "'self'",
+            'https://apollo-server-landing-page.cdn.apollographql.com',
+          ],
+
+          connectSrc: [
+            "'self'",
+
+            // Apollo
+            'https://apollo-server-landing-page.cdn.apollographql.com',
+            'https://embeddable-sandbox.cdn.apollographql.com',
           ],
         },
       },
@@ -156,7 +175,7 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       disableErrorMessages: false,
-      transform: true,
+      transform: false,
     }),
   );
 

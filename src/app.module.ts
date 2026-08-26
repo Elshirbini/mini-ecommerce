@@ -14,7 +14,7 @@ import { createOrderLoader } from './order/loaders/order.loader';
 import { RedisModule } from './redis/redis.module';
 import { winstonLogger } from './common/winston-logger';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { Redis } from 'ioredis';
 import { APP_GUARD } from '@nestjs/core';
@@ -23,16 +23,19 @@ import { AutomapperModule } from '@automapper/nestjs';
 import { classes } from '@automapper/classes';
 import { GqlThrottlerGuard } from './common/guards/gql-throttler.guard';
 import { GraphQLLoggingPlugin } from './common/plugins/graphqlLogging.plugin';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { CloudflareModule } from './cloudflare/cloudflare.module';
 
 @Module({
   imports: [
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       imports: [OrderModule],
-      inject: [OrderService],
+      inject: [OrderService, ConfigService],
       useFactory: (orderService: OrderService) => ({
-        allowBatchedHttpRequests: true,
-        introspection: process.env.NODE_ENV === 'dev',
+        playground: false,
+        allowBatchedHttpRequests: process.env.NODE_ENV === 'dev',
+        introspection: true,
         persistedQueries: {},
         autoSchemaFile: join(process.cwd(), 'src', 'graphql', 'schema.gql'),
         validationRules: [depthLimit(10)], // 10 depth max limit
@@ -52,7 +55,10 @@ import { GraphQLLoggingPlugin } from './common/plugins/graphqlLogging.plugin';
           reply,
           orderLoader: createOrderLoader(orderService),
         }),
-        plugins: [GraphQLLoggingPlugin],
+        plugins: [
+          GraphQLLoggingPlugin,
+          ApolloServerPluginLandingPageLocalDefault(),
+        ],
       }),
     }),
 
@@ -98,6 +104,7 @@ import { GraphQLLoggingPlugin } from './common/plugins/graphqlLogging.plugin';
     UserModule,
     OrderModule,
     AuthModule,
+    CloudflareModule,
     RedisModule,
   ],
   providers: [

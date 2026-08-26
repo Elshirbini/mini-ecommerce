@@ -18,6 +18,10 @@ export class User {
   email!: string;
 
   @AutoMap()
+  @Field({ nullable: true })
+  imageUrl?: string;
+
+  @AutoMap()
   @Field(() => UserRole)
   role!: UserRole;
 
