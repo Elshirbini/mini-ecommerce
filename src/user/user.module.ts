@@ -9,6 +9,7 @@ import { RedisModule } from 'src/redis/redis.module';
 import { CommonModule } from 'src/common/common.module';
 import { JwtModule } from '@nestjs/jwt';
 import { UserProfile } from './mappers/user.profile';
+import { CloudflareModule } from 'src/cloudflare/cloudflare.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserProfile } from './mappers/user.profile';
     RedisModule,
     CommonModule,
     JwtModule,
+    CloudflareModule,
   ],
   providers: [UserResolver, UserService, UserRepository, UserProfile],
   exports: [UserService],

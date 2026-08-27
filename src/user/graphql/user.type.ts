@@ -10,8 +10,12 @@ export class User {
   id!: string;
 
   @AutoMap()
-  @Field()
+  @Field({ deprecationReason: 'User fullName' })
   name!: string;
+
+  @AutoMap()
+  @Field()
+  fullName!: string;
 
   @AutoMap()
   @Field()

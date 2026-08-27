@@ -12,7 +12,11 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import fastifyCookie from '@fastify/cookie';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import {
+  BadRequestException,
+  ValidationPipe,
+  VersioningType,
+} from '@nestjs/common';
 import fastifyHelmet from '@fastify/helmet';
 import * as multipart from '@fastify/multipart';
 import fastifyCompress from '@fastify/compress';
@@ -164,18 +168,21 @@ async function bootstrap() {
   );
   await app.register(fastifyCookie as any);
 
-  app.setGlobalPrefix('/api/');
-
-  app.enableVersioning({
-    type: VersioningType.URI,
-  });
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       disableErrorMessages: false,
-      transform: false,
+      transform: true,
+      // exceptionFactory: (errors) => {
+      //   console.log('🔥 VALIDATION ERRORS:', JSON.stringify(errors, null, 2));
+
+      //   const messages = errors.flatMap((error) =>
+      //     Object.values(error.constraints ?? {}),
+      //   );
+
+      //   return new BadRequestException(messages.join(', '));
+      // },
     }),
   );
 
@@ -185,6 +192,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('Error during application bootstrap:', err);
+  winstonLogger.error('Error during application bootstrap:', err);
   process.exit(1);
 });

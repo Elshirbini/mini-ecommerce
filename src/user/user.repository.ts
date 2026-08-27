@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, QueryFilter } from 'mongoose';
+import { Model, QueryFilter, UpdateQuery } from 'mongoose';
 import { UserDocument, User } from './schemas/user.schema';
 import { UserFilterInput } from './graphql/user-filter.input';
 
@@ -11,6 +11,20 @@ export class UserRepository {
   async create(userData: Partial<User>): Promise<UserDocument> {
     const createdUser = new this.User(userData);
     return createdUser.save();
+  }
+
+  async updateUserByQuery(query: QueryFilter<User>, data: UpdateQuery<User>) {
+    return this.User.findOneAndUpdate(query, data, {
+      runValidators: true,
+      returnDocument: 'after',
+    });
+  }
+
+  async findUserByIdAndUpdate(id: string, data: QueryFilter<User>) {
+    return this.User.findByIdAndUpdate(id, data, {
+      runValidators: true,
+      returnDocument: 'after',
+    });
   }
 
   async findByEmail(email: string): Promise<UserDocument | null> {

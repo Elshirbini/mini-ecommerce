@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { HttpException, Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { UserModule } from './user/user.module';
@@ -25,6 +25,8 @@ import { GqlThrottlerGuard } from './common/guards/gql-throttler.guard';
 import { GraphQLLoggingPlugin } from './common/plugins/graphqlLogging.plugin';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { CloudflareModule } from './cloudflare/cloudflare.module';
+import { getErrorMessage } from './utils/error-message.util';
+import { GraphQLError } from 'graphql';
 
 @Module({
   imports: [
@@ -40,15 +42,44 @@ import { CloudflareModule } from './cloudflare/cloudflare.module';
         autoSchemaFile: join(process.cwd(), 'src', 'graphql', 'schema.gql'),
         validationRules: [depthLimit(10)], // 10 depth max limit
         formatError: (formattedError, error) => {
+          const originalError =
+            error instanceof GraphQLError ? error.originalError : undefined;
+
+          let message = formattedError.message;
+
+          if (originalError instanceof HttpException) {
+            const response = originalError.getResponse();
+
+            if (
+              typeof response === 'object' &&
+              response !== null &&
+              'message' in response
+            ) {
+              const validationMessage = response.message;
+
+              if (Array.isArray(validationMessage)) {
+                message = validationMessage.join(', ');
+              } else if (typeof validationMessage === 'string') {
+                message = validationMessage;
+              }
+            }
+          }
+
           winstonLogger.error({
             type: 'graphql_error',
-            message: formattedError.message,
+            message,
             code: formattedError.extensions?.code,
             path: formattedError.path,
             stack: error instanceof Error ? error.stack : undefined,
           });
 
-          return formattedError;
+          return {
+            message,
+            path: formattedError.path,
+            extensions: {
+              code: formattedError.extensions?.code,
+            },
+          };
         },
         context: (request: FastifyRequest, reply: FastifyReply) => ({
           request,

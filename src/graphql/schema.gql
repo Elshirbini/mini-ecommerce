@@ -10,7 +10,8 @@ type Order {
 
 type User {
   id: ID!
-  name: String!
+  name: String! @deprecated(reason: "User fullName")
+  fullName: String!
   email: String!
   imageUrl: String
   role: UserRole!
@@ -50,24 +51,23 @@ input UserFilterInput {
 }
 
 type Mutation {
-  createUser(input: CreateUserInput!): User!
+  updateUser(input: UpdateUserInput, file: Upload): User!
   signup(input: SignupInput!, file: Upload): AuthPayload!
   login(input: LoginInput!): AuthPayload!
 }
 
-input CreateUserInput {
-  name: String!
-  email: String!
+input UpdateUserInput {
+  name: String
 }
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
 
 input SignupInput {
   name: String!
   email: String!
   password: String!
 }
-
-"""The `Upload` scalar type represents a file upload."""
-scalar Upload
 
 input LoginInput {
   email: String!

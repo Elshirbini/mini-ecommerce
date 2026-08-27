@@ -32,18 +32,18 @@ export class SignupInput {
 @InputType()
 export class LoginInput {
   @Field()
-  @IsEmail()
   @IsNotEmpty()
+  @IsEmail()
   email!: string;
 
   @Field()
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @MinLength(8)
   password!: string;
 
   @Field()
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   turnstileToken!: string;
 }

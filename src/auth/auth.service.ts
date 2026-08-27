@@ -1,4 +1,9 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/user/user.service';
 import { SignupInput, LoginInput } from './graphql/auth.input';
@@ -82,6 +87,7 @@ export class AuthService {
       user: {
         id: user._id.toString(),
         name: user.name,
+        fullName: user.name,
         email: user.email,
         role: user.role,
         imageUrl: user.imageUrl,
@@ -96,9 +102,7 @@ export class AuthService {
     }
   > {
     const user = await this.userService.findByEmail(input.email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!user) throw new NotFoundException('User not found');
 
     const isPasswordValid = await bcrypt.compare(input.password, user.password);
     if (!isPasswordValid) {
@@ -114,6 +118,7 @@ export class AuthService {
       user: {
         id: user._id.toString(),
         name: user.name,
+        fullName: user.name,
         email: user.email,
         role: user.role,
       },

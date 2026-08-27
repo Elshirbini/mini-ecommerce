@@ -2,7 +2,7 @@ import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { AuthPayload } from './graphql/auth.type';
 import { SignupInput, LoginInput } from './graphql/auth.input';
-import { Res, UseGuards, ValidationPipe } from '@nestjs/common';
+import { UseGuards, ValidationPipe } from '@nestjs/common';
 import { Turnstile } from 'src/common/security/turnstile/turnstile.decorator';
 import { TurnstileGuard } from 'src/common/security/turnstile/turnstile.guard';
 import { GraphQLContext } from 'src/graphql/graphql-context';

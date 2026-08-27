@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { UserRepository } from './user.repository';
 import { User, UserDocument } from './schemas/user.schema';
@@ -10,18 +10,78 @@ import { InjectMapper } from '@automapper/nestjs';
 import { Mapper } from '@automapper/core';
 import { User as MongoUser } from './schemas/user.schema';
 import { User as GraphQLUser } from './graphql/user.type';
+import { UpdateUserInput } from './graphql/update-user.input';
+import { FileUpload } from 'graphql-upload/processRequest.mjs';
+import { CloudflareService } from 'src/cloudflare/cloudflare.service';
+import { validateUploadedFile } from 'src/utils/file-validation.util';
 
 @Injectable()
 export class UserService {
+  logger = new Logger(UserService.name);
   constructor(
     private readonly userRepository: UserRepository,
     private readonly cacheService: RedisService,
+    private readonly cloudflareR2: CloudflareService,
     @InjectMapper()
     private readonly mapper: Mapper,
   ) {}
 
   async create(userData: Partial<User>): Promise<UserDocument> {
     return this.userRepository.create(userData);
+  }
+
+  async updateUser(
+    ctx: GraphQLContext,
+    userData: UpdateUserInput,
+    file?: FileUpload,
+  ) {
+    const userId = ctx.request.userId!;
+    let imageKey: string | undefined;
+    let imageUrl: string | undefined;
+
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    if (file) {
+      this.logger.log('File Recieved');
+      const stream = file.createReadStream();
+
+      const chunks: Buffer[] = [];
+
+      for await (const chunk of stream) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+
+      const buffer = Buffer.concat(chunks);
+
+      const result = await validateUploadedFile(
+        buffer,
+        {
+          allowedMimeTypes: ['image/jpeg', 'image/png'],
+          maxSizeInMB: 5,
+        },
+        file.filename,
+      );
+
+      const { key, url } = await this.cloudflareR2.uploadFileS3(
+        buffer,
+        `profile-pictures/${user.email}/${Date.now()}`,
+        result.mime,
+      );
+
+      if (user.imageKey) await this.cloudflareR2.deleteFileS3(user.imageKey);
+
+      imageKey = key;
+      imageUrl = url;
+    }
+
+    const updatedUser = await this.userRepository.updateUserByQuery(
+      { _id: user._id },
+      { ...userData, imageKey, imageUrl },
+    );
+
+    const mappedUser = this.mapper.map(updatedUser, MongoUser, GraphQLUser);
+    return { ...mappedUser, fullName: mappedUser.name };
   }
 
   async findByEmail(email: string): Promise<UserDocument | null> {
