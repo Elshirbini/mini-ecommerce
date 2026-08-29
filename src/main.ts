@@ -12,18 +12,15 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import fastifyCookie from '@fastify/cookie';
-import {
-  BadRequestException,
-  ValidationPipe,
-  VersioningType,
-} from '@nestjs/common';
 import fastifyHelmet from '@fastify/helmet';
-import * as multipart from '@fastify/multipart';
 import fastifyCompress from '@fastify/compress';
 import { winstonLogger } from './common/winston-logger';
 import * as crypto from 'crypto';
 import blockedAt from 'blocked-at';
 import processRequest from 'graphql-upload/processRequest.mjs';
+import { GraphQLValidationPipe } from './common/pipes/graphql-validation.pipe';
+import { join } from 'path';
+import { mkdir } from 'fs/promises';
 
 type BlockedAtFn = (
   onBlock: (time: number, stack: unknown) => void,
@@ -69,7 +66,7 @@ async function bootstrap() {
       done(null);
     },
   );
-  fastify.addHook('preValidation', async (request, reply) => {
+  fastify.addHook('preHandler', async (request, reply) => {
     const contentType = request.headers['content-type'];
 
     if (!contentType?.startsWith('multipart/form-data')) {
@@ -169,24 +166,18 @@ async function bootstrap() {
   await app.register(fastifyCookie as any);
 
   app.useGlobalPipes(
-    new ValidationPipe({
+    new GraphQLValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       disableErrorMessages: false,
       transform: true,
-      // exceptionFactory: (errors) => {
-      //   console.log('🔥 VALIDATION ERRORS:', JSON.stringify(errors, null, 2));
-
-      //   const messages = errors.flatMap((error) =>
-      //     Object.values(error.constraints ?? {}),
-      //   );
-
-      //   return new BadRequestException(messages.join(', '));
-      // },
     }),
   );
 
   app.enableShutdownHooks();
+
+  const tempDir = join(process.cwd(), 'temp');
+  await mkdir(tempDir, { recursive: true });
 
   await app.listen(3000, '0.0.0.0');
 }

@@ -49,7 +49,7 @@ export class UserResolver {
     @Context() ctx: GraphQLContext,
     @Args('input', { nullable: true }) userData: UpdateUserInput,
     @Args('file', { type: () => GraphQLUpload, nullable: true })
-    file?: FileUpload,
+    file?: Promise<FileUpload>,
   ) {
     return this.userService.updateUser(ctx, userData, file);
   }

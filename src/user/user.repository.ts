@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, QueryFilter, UpdateQuery } from 'mongoose';
+import { Model, QueryFilter, Types, UpdateQuery } from 'mongoose';
 import { UserDocument, User } from './schemas/user.schema';
 import { UserFilterInput } from './graphql/user-filter.input';
 
@@ -36,28 +36,67 @@ export class UserRepository {
   }
 
   async findAllUsers(filter: UserFilterInput) {
-    const page = filter.page ? Number(filter.page) : 1;
     const limit = filter.limit !== undefined ? Number(filter.limit) : 10;
 
     const queryFilter: QueryFilter<User> = {};
 
-    if (filter.role) {
-      queryFilter.role = filter.role;
+    if (filter.search) {
+      queryFilter.$or = [
+        { name: { $regex: filter.search, $options: 'i' } },
+        { email: { $regex: filter.search, $options: 'i' } },
+      ];
     }
-    const findQuery = this.User.find(queryFilter);
 
-    if (limit > 0) {
-      findQuery.skip((page - 1) * limit).limit(limit);
+    if (filter.after) {
+      queryFilter._id = { $gt: new Types.ObjectId(filter.after) };
     }
+
+    const findQuery = this.User.find(queryFilter)
+      .sort({ _id: 1 })
+      .limit(limit + 1);
 
     const [users, totalCount] = await Promise.all([
       findQuery.exec(),
       this.User.countDocuments(queryFilter).exec(),
     ]);
 
+    const hasNextPage = users.length > limit;
+    const items = hasNextPage ? users.slice(0, limit) : users;
+
     return {
-      users,
+      users: items,
+      hasNextPage,
+      endCursor:
+        items.length > 0 ? items[items.length - 1]._id.toString() : undefined,
       totalCount,
     };
   }
+  // async findAllUsers(filter: UserFilterInput) {
+  //   const page = filter.page ? Number(filter.page) : 1;
+  //   const limit = filter.limit !== undefined ? Number(filter.limit) : 10;
+
+  //   const queryFilter: QueryFilter<User> = {};
+
+  //   if (filter.search) {
+  //     queryFilter.$or = [
+  //       { name: { $regex: filter.search, $options: 'i' } },
+  //       { email: { $regex: filter.search, $options: 'i' } },
+  //     ];
+  //   }
+  //   const findQuery = this.User.find(queryFilter);
+
+  //   if (limit > 0) {
+  //     findQuery.skip((page - 1) * limit).limit(limit);
+  //   }
+
+  //   const [users, totalCount] = await Promise.all([
+  //     findQuery.exec(),
+  //     this.User.countDocuments(queryFilter).exec(),
+  //   ]);
+
+  //   return {
+  //     users,
+  //     totalCount,
+  //   };
+  // }
 }

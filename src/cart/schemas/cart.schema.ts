@@ -1,10 +1,12 @@
+import { AutoMap } from '@automapper/classes';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
-export type OrderDocument = HydratedDocument<Order>;
+export type CartDocument = HydratedDocument<Cart>;
 
 @Schema({ _id: false })
-export class OrderItem {
+export class CartItem {
+  @AutoMap()
   @Prop({
     type: Types.ObjectId,
     ref: 'Product',
@@ -12,18 +14,21 @@ export class OrderItem {
   })
   productId!: Types.ObjectId;
 
+  @AutoMap()
   @Prop({
     required: true,
     min: 1,
   })
   quantity!: number;
 
+  @AutoMap()
   @Prop({
     required: true,
     min: 0,
   })
   price!: number;
 
+  @AutoMap()
   @Prop({
     required: true,
     min: 0,
@@ -31,30 +36,37 @@ export class OrderItem {
   totalPrice!: number;
 }
 
-export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
+export const CartItemSchema = SchemaFactory.createForClass(CartItem);
 
 @Schema({ timestamps: true })
-export class Order {
+export class Cart {
+  @AutoMap()
+  _id!: Types.ObjectId;
+
+  @AutoMap()
   @Prop({
     type: Types.ObjectId,
     ref: 'User',
     required: true,
+    unique: true,
     index: true,
   })
   userId!: Types.ObjectId;
 
+  @AutoMap()
+  @Prop({
+    type: [CartItemSchema],
+    default: [],
+  })
+  items!: CartItem[];
+
+  @AutoMap()
   @Prop({
     required: true,
     min: 0,
+    default: 0,
   })
   total!: number;
-
-  @Prop({
-    type: [OrderItemSchema],
-    required: true,
-    default: [],
-  })
-  cartItems!: OrderItem[];
 }
 
-export const OrderSchema = SchemaFactory.createForClass(Order);
+export const CartSchema = SchemaFactory.createForClass(Cart);

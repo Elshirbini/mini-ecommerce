@@ -24,7 +24,6 @@ export function createOrderLoader(
       ordersByUserId.get(userId)?.push({
         id: order._id.toString(),
         total: order.total,
-        status: order.status,
       });
     }
 

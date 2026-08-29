@@ -5,7 +5,6 @@
 type Order {
   id: ID!
   total: Float!
-  status: String!
 }
 
 type User {
@@ -27,6 +26,8 @@ type PaginationMeta {
   page: Int!
   limit: Int!
   totalCount: Int!
+  hasNextPage: Boolean!
+  endCursor: String
 }
 
 type UsersResponse {
@@ -38,6 +39,35 @@ type AuthPayload {
   user: User!
 }
 
+type Image {
+  imageKey: String!
+  imageUrl: String!
+}
+
+type Product {
+  productId: ID!
+  title: String!
+  description: String!
+  price: Float!
+  discount: Int!
+  quantity: Int!
+  thumbnail: Image
+  images: [Image!]
+}
+
+type Item {
+  productId: ID!
+  price: Float!
+  quantity: Int!
+  totalPrice: Float!
+}
+
+type Cart {
+  cartId: ID!
+  total: Float!
+  items: [Item!]!
+}
+
 type Query {
   orders: [Order!]!
   user: User!
@@ -47,13 +77,16 @@ type Query {
 input UserFilterInput {
   page: Int! = 1
   limit: Int! = 10
-  role: UserRole
+  after: String
+  search: String
 }
 
 type Mutation {
   updateUser(input: UpdateUserInput, file: Upload): User!
   signup(input: SignupInput!, file: Upload): AuthPayload!
   login(input: LoginInput!): AuthPayload!
+  addProduct(input: AddProductInput!, thumbnail: Upload, images: [Upload!]): Product!
+  addToCart(input: AddToCartInput!): Cart!
 }
 
 input UpdateUserInput {
@@ -73,4 +106,17 @@ input LoginInput {
   email: String!
   password: String!
   turnstileToken: String!
+}
+
+input AddProductInput {
+  title: String!
+  description: String!
+  price: Float!
+  discount: Int!
+  quantity: Int!
+}
+
+input AddToCartInput {
+  productId: ID!
+  quantity: Int!
 }

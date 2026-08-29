@@ -1,6 +1,5 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { UserRole } from '../enums/userRole.enum';
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, Max } from 'class-validator';
 
 @InputType()
 export class UserFilterInput {
@@ -10,9 +9,14 @@ export class UserFilterInput {
 
   @Field(() => Int, { defaultValue: 10 })
   @IsNotEmpty()
+  @Max(50)
   limit!: number;
 
-  @Field(() => UserRole, { nullable: true })
+  @Field({ nullable: true })
   @IsOptional()
-  role?: UserRole;
+  after?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  search?: string;
 }

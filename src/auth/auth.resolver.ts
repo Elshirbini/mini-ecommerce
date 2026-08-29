@@ -2,7 +2,7 @@ import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { AuthPayload } from './graphql/auth.type';
 import { SignupInput, LoginInput } from './graphql/auth.input';
-import { UseGuards, ValidationPipe } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import { Turnstile } from 'src/common/security/turnstile/turnstile.decorator';
 import { TurnstileGuard } from 'src/common/security/turnstile/turnstile.guard';
 import { GraphQLContext } from 'src/graphql/graphql-context';
@@ -18,14 +18,7 @@ export class AuthResolver {
 
   @Mutation(() => AuthPayload)
   async signup(
-    @Args(
-      'input',
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
+    @Args('input')
     input: SignupInput,
     @Args('file', { type: () => GraphQLUpload, nullable: true })
     file?: FileUpload,

@@ -12,7 +12,6 @@ export class OrderResolver {
     return orders.map((order) => ({
       id: order._id.toString(),
       total: order.total,
-      status: order.status,
     }));
   }
 }

@@ -10,4 +10,10 @@ export class PaginationMeta {
 
   @Field(() => Int)
   totalCount!: number;
+
+  @Field(() => Boolean)
+  hasNextPage!: boolean;
+
+  @Field({ nullable: true })
+  endCursor?: string;
 }

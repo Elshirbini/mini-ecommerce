@@ -7,7 +7,4 @@ export class Order {
 
   @Field(() => Float)
   total!: number;
-
-  @Field()
-  status!: string;
 }

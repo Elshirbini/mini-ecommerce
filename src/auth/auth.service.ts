@@ -36,13 +36,6 @@ export class AuthService {
     if (file) {
       const upload = file;
 
-      this.logger.log('FILE RECEIVED');
-      this.logger.log({
-        filename: upload.filename,
-        mimetype: upload.mimetype,
-        encoding: upload.encoding,
-      });
-
       const stream = upload.createReadStream();
 
       const chunks: Buffer[] = [];

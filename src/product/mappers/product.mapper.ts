@@ -1,10 +1,10 @@
 import { Mapper } from '@automapper/core';
 import { createMap, forMember, mapFrom } from '@automapper/core';
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
-import { User as MongoUser } from '../schemas/user.schema';
-import { User as GraphQLUser } from '../graphql/user.type';
+import { Product as MongoProduct } from '../schemas/product.schema';
+import { Product as GraphQLProduct } from '../graphql/product.type';
 
-export class UserProfile extends AutomapperProfile {
+export class ProductMapper extends AutomapperProfile {
   constructor(@InjectMapper() mapper: Mapper) {
     super(mapper);
   }
@@ -13,16 +13,21 @@ export class UserProfile extends AutomapperProfile {
     return (mapper: Mapper) => {
       createMap(
         mapper,
-        MongoUser,
-        GraphQLUser,
+        MongoProduct,
+        GraphQLProduct,
 
         forMember(
-          (dest) => dest.id,
+          (dest) => dest.productId,
           mapFrom((src) => src._id.toString()),
         ),
         forMember(
-          (dest) => dest.fullName,
-          mapFrom((src) => src.name),
+          (dest) => dest.thumbnail,
+          mapFrom((src) => src.thumbnail),
+        ),
+
+        forMember(
+          (dest) => dest.images,
+          mapFrom((src) => src.images),
         ),
       );
     };

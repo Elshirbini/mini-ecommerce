@@ -25,8 +25,9 @@ import { GqlThrottlerGuard } from './common/guards/gql-throttler.guard';
 import { GraphQLLoggingPlugin } from './common/plugins/graphqlLogging.plugin';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { CloudflareModule } from './cloudflare/cloudflare.module';
-import { getErrorMessage } from './utils/error-message.util';
 import { GraphQLError } from 'graphql';
+import { ProductModule } from './product/product.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -64,14 +65,6 @@ import { GraphQLError } from 'graphql';
               }
             }
           }
-
-          winstonLogger.error({
-            type: 'graphql_error',
-            message,
-            code: formattedError.extensions?.code,
-            path: formattedError.path,
-            stack: error instanceof Error ? error.stack : undefined,
-          });
 
           return {
             message,
@@ -137,6 +130,8 @@ import { GraphQLError } from 'graphql';
     AuthModule,
     CloudflareModule,
     RedisModule,
+    ProductModule,
+    CartModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: GqlThrottlerGuard },

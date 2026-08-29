@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { OrderRepository } from './order.repository';
-import { OrderModel, OrderDocument } from './schemas/order.schema';
+import { OrderDocument } from './schemas/order.schema';
 
 @Injectable()
 export class OrderService {
   constructor(private readonly orderRepository: OrderRepository) {}
 
-  async create(orderData: Partial<OrderModel>): Promise<OrderDocument> {
+  async create(orderData: Partial<OrderDocument>): Promise<OrderDocument> {
     return this.orderRepository.create(orderData);
   }
 

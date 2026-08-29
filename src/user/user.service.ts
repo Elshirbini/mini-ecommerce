@@ -33,7 +33,7 @@ export class UserService {
   async updateUser(
     ctx: GraphQLContext,
     userData: UpdateUserInput,
-    file?: FileUpload,
+    file?: Promise<FileUpload>,
   ) {
     const userId = ctx.request.userId!;
     let imageKey: string | undefined;
@@ -43,8 +43,9 @@ export class UserService {
     if (!user) throw new NotFoundException('User not found');
 
     if (file) {
-      this.logger.log('File Recieved');
-      const stream = file.createReadStream();
+      this.logger.log('recieved');
+      const upload = await file;
+      const stream = upload.createReadStream();
 
       const chunks: Buffer[] = [];
 
@@ -60,7 +61,7 @@ export class UserService {
           allowedMimeTypes: ['image/jpeg', 'image/png'],
           maxSizeInMB: 5,
         },
-        file.filename,
+        upload.filename,
       );
 
       const { key, url } = await this.cloudflareR2.uploadFileS3(
@@ -80,8 +81,7 @@ export class UserService {
       { ...userData, imageKey, imageUrl },
     );
 
-    const mappedUser = this.mapper.map(updatedUser, MongoUser, GraphQLUser);
-    return { ...mappedUser, fullName: mappedUser.name };
+    return this.mapper.map(updatedUser, MongoUser, GraphQLUser);
   }
 
   async findByEmail(email: string): Promise<UserDocument | null> {
@@ -106,7 +106,7 @@ export class UserService {
   }
 
   async getUsers(filter: UserFilterInput): Promise<UsersResponse> {
-    const { users, totalCount } =
+    const { users, endCursor, hasNextPage, totalCount } =
       await this.userRepository.findAllUsers(filter);
 
     const mappedUsers = this.mapper.mapArray(users, MongoUser, GraphQLUser);
@@ -117,6 +117,8 @@ export class UserService {
         totalCount,
         page: filter.page,
         limit: filter.limit,
+        endCursor,
+        hasNextPage,
       },
     };
   }
