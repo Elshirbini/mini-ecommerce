@@ -3,16 +3,14 @@ import { createMap, forMember, mapFrom } from '@automapper/core';
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
 
 import {
-  Cart as MongoCart,
-  CartItem as MongoCartItem,
-} from '../schemas/cart.schema';
+  Order as MongoOrder,
+  OrderItem as MongoOrderItem,
+} from '../schemas/order.schema';
 
-import {
-  Cart as GraphQLCart,
-  Item as GraphQLCartItem,
-} from '../graphql/cart.type';
+import { Order as GraphQLOrder } from '../graphql/order.type';
+import { Item as GraphQLOrderItem } from '../../cart/graphql/cart.type';
 
-export class CartMapper extends AutomapperProfile {
+export class OrderMapper extends AutomapperProfile {
   constructor(@InjectMapper() mapper: Mapper) {
     super(mapper);
   }
@@ -21,8 +19,8 @@ export class CartMapper extends AutomapperProfile {
     return (mapper: Mapper) => {
       createMap(
         mapper,
-        MongoCartItem,
-        GraphQLCartItem,
+        MongoOrderItem,
+        GraphQLOrderItem,
 
         forMember(
           (dest) => dest.productId,
@@ -32,13 +30,8 @@ export class CartMapper extends AutomapperProfile {
 
       createMap(
         mapper,
-        MongoCart,
-        GraphQLCart,
-
-        forMember(
-          (dest) => dest.cartId,
-          mapFrom((src) => src._id.toString()),
-        ),
+        MongoOrder,
+        GraphQLOrder,
 
         forMember(
           (dest) => dest.userId,
@@ -46,9 +39,14 @@ export class CartMapper extends AutomapperProfile {
         ),
 
         forMember(
-          (dest) => dest.items,
+          (dest) => dest.orderId,
+          mapFrom((src) => src._id.toString()),
+        ),
+
+        forMember(
+          (dest) => dest.cartItems,
           mapFrom((src) =>
-            mapper.mapArray(src.items, MongoCartItem, GraphQLCartItem),
+            mapper.mapArray(src.cartItems, MongoOrderItem, GraphQLOrderItem),
           ),
         ),
       );

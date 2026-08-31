@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserResolver } from './user.resolver';
 import { OrderModule } from 'src/order/order.module';
@@ -14,13 +14,13 @@ import { CloudflareModule } from 'src/cloudflare/cloudflare.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    OrderModule,
+    forwardRef(() => OrderModule),
     RedisModule,
     CommonModule,
     JwtModule,
     CloudflareModule,
   ],
   providers: [UserResolver, UserService, UserRepository, UserProfile],
-  exports: [UserService],
+  exports: [UserService, UserRepository],
 })
 export class UserModule {}

@@ -27,10 +27,14 @@ export class Cart {
   cartId!: string;
 
   @AutoMap()
+  @Field(() => ID)
+  userId!: string;
+
+  @AutoMap()
   @Field(() => Number)
   total!: number;
 
-  @AutoMap()
+  @AutoMap(() => [Item])
   @Field(() => [Item])
   items!: Item[];
 }

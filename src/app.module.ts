@@ -10,7 +10,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import depthLimit from 'graphql-depth-limit';
 import { ComplexityPlugin } from './complexity.plugin';
 import { OrderService } from './order/order.service';
-import { createOrderLoader } from './order/loaders/order.loader';
+// import { createOrderLoader } from './order/loaders/order.loader';
 import { RedisModule } from './redis/redis.module';
 import { winstonLogger } from './common/winston-logger';
 import { FastifyReply, FastifyRequest } from 'fastify';
@@ -77,7 +77,7 @@ import { CartModule } from './cart/cart.module';
         context: (request: FastifyRequest, reply: FastifyReply) => ({
           request,
           reply,
-          orderLoader: createOrderLoader(orderService),
+          // orderLoader: createOrderLoader(orderService),
         }),
         plugins: [
           GraphQLLoggingPlugin,

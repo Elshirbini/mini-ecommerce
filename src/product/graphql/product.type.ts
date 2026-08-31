@@ -36,11 +36,11 @@ export class Product {
   @Field(() => Int)
   quantity!: number;
 
-  @AutoMap()
+  @AutoMap(() => Image)
   @Field(() => Image, { nullable: true })
   thumbnail?: Image;
 
-  @AutoMap()
+  @AutoMap(() => [Image])
   @Field(() => [Image], { nullable: true })
   images?: Image[];
 }

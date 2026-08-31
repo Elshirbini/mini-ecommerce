@@ -53,7 +53,7 @@ export class Cart {
   })
   userId!: Types.ObjectId;
 
-  @AutoMap()
+  @AutoMap(() => [CartItem])
   @Prop({
     type: [CartItemSchema],
     default: [],

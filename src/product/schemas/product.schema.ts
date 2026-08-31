@@ -43,7 +43,7 @@ export class Product {
   })
   thumbnail?: ProductImage;
 
-  @AutoMap()
+  @AutoMap(() => [ProductImage])
   @Prop({
     type: [ProductImageSchema],
     default: [],

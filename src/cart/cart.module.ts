@@ -17,5 +17,6 @@ import { ProductModule } from 'src/product/product.module';
     CommonModule,
   ],
   providers: [CartResolver, CartService, CartRepository, CartMapper],
+  exports: [CartRepository],
 })
 export class CartModule {}

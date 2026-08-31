@@ -66,17 +66,23 @@ async function bootstrap() {
       done(null);
     },
   );
-  fastify.addHook('preHandler', async (request, reply) => {
+
+  fastify.addHook('preValidation', async (request, reply) => {
     const contentType = request.headers['content-type'];
 
     if (!contentType?.startsWith('multipart/form-data')) {
       return;
     }
 
-    request.body = await processRequest(request.raw, reply.raw, {
-      maxFileSize: 10 * 1024 * 1024,
-      maxFiles: 5,
-    });
+    try {
+      request.body = await processRequest(request.raw, reply.raw, {
+        maxFileSize: 10 * 1024 * 1024,
+        maxFiles: 5,
+      });
+    } catch (error) {
+      winstonLogger.error('PROCESS REQUEST ERROR:', error);
+      throw error;
+    }
   });
 
   app
@@ -183,6 +189,11 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  winstonLogger.error('Error during application bootstrap:', err);
+  winstonLogger.error({
+    message: 'Error during application bootstrap',
+    error: err instanceof Error ? err.message : err,
+    stack: err instanceof Error ? err.stack : undefined,
+  });
+
   process.exit(1);
 });

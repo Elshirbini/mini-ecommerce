@@ -38,9 +38,6 @@ export class ProductService {
     let thumbnailObj: { imageKey: string; imageUrl: string } | undefined;
     const imagesArr: { imageKey: string; imageUrl: string }[] = [];
 
-    this.logger.log(thumbnail);
-    this.logger.log(images);
-
     if (thumbnail) {
       const upload = await thumbnail;
       const stream = upload.createReadStream();

@@ -10,8 +10,7 @@ export class OrderRepository {
   ) {}
 
   async create(orderData: Partial<Order>): Promise<OrderDocument> {
-    const createdOrder = new this.orderModel(orderData);
-    return createdOrder.save();
+    return this.orderModel.create(orderData);
   }
 
   async findByUserId(userId: string): Promise<OrderDocument[]> {

@@ -2,9 +2,27 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Order {
-  id: ID!
+type Item {
+  productId: ID!
+  price: Float!
+  quantity: Int!
+  totalPrice: Float!
+}
+
+type Cart {
+  cartId: ID!
+  userId: ID!
   total: Float!
+  items: [Item!]!
+}
+
+type Order {
+  orderId: ID!
+  userId: ID!
+  isPaid: Boolean!
+  isDelivered: Boolean!
+  total: Float!
+  cartItems: [Item!]!
 }
 
 type User {
@@ -35,10 +53,6 @@ type UsersResponse {
   meta: PaginationMeta!
 }
 
-type AuthPayload {
-  user: User!
-}
-
 type Image {
   imageKey: String!
   imageUrl: String!
@@ -55,21 +69,11 @@ type Product {
   images: [Image!]
 }
 
-type Item {
-  productId: ID!
-  price: Float!
-  quantity: Int!
-  totalPrice: Float!
-}
-
-type Cart {
-  cartId: ID!
-  total: Float!
-  items: [Item!]!
+type AuthPayload {
+  user: User!
 }
 
 type Query {
-  orders: [Order!]!
   user: User!
   users(filter: UserFilterInput!): UsersResponse!
 }
@@ -82,19 +86,42 @@ input UserFilterInput {
 }
 
 type Mutation {
+  makeOrder(input: MakeOrderInput): Order!
+  addToCart(input: AddToCartInput!): Cart!
+  addProduct(input: AddProductInput!, thumbnail: Upload, images: [Upload!]): Product!
   updateUser(input: UpdateUserInput, file: Upload): User!
   signup(input: SignupInput!, file: Upload): AuthPayload!
   login(input: LoginInput!): AuthPayload!
-  addProduct(input: AddProductInput!, thumbnail: Upload, images: [Upload!]): Product!
-  addToCart(input: AddToCartInput!): Cart!
 }
 
-input UpdateUserInput {
-  name: String
+input MakeOrderInput {
+  items: [OrderItem!]
+}
+
+input OrderItem {
+  productId: ID!
+  quantity: Int!
+}
+
+input AddToCartInput {
+  productId: ID!
+  quantity: Int!
+}
+
+input AddProductInput {
+  title: String!
+  description: String!
+  price: Float!
+  discount: Int!
+  quantity: Int!
 }
 
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
+
+input UpdateUserInput {
+  name: String
+}
 
 input SignupInput {
   name: String!
@@ -106,17 +133,4 @@ input LoginInput {
   email: String!
   password: String!
   turnstileToken: String!
-}
-
-input AddProductInput {
-  title: String!
-  description: String!
-  price: Float!
-  discount: Int!
-  quantity: Int!
-}
-
-input AddToCartInput {
-  productId: ID!
-  quantity: Int!
 }

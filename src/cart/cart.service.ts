@@ -45,8 +45,6 @@ export class CartService {
       userId: new Types.ObjectId(userId),
     });
 
-    this.logger.log(cart);
-
     if (cart) {
       const index = cart.items.findIndex(
         (item) => item.productId._id.toString() === productData.productId,
@@ -54,13 +52,14 @@ export class CartService {
 
       if (index !== -1) {
         cart.items[index].quantity += productData.quantity;
-        cart.items[index].totalPrice = product.price * productData.quantity;
+        cart.items[index].totalPrice =
+          (product.price - product.discount) * cart.items[index].quantity;
       } else {
         cart.items.push({
           productId: product._id,
           price: product.price,
           quantity: productData.quantity,
-          totalPrice: product.price * productData.quantity,
+          totalPrice: (product.price - product.discount) * productData.quantity,
         });
       }
       cart.total = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
@@ -71,7 +70,7 @@ export class CartService {
         productId: product._id,
         price: product.price,
         quantity: productData.quantity,
-        totalPrice: product.price * productData.quantity,
+        totalPrice: (product.price - product.discount) * productData.quantity,
       };
       const total = item.totalPrice;
 
