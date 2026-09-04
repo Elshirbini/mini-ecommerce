@@ -10,6 +10,7 @@ import { ProductModule } from 'src/product/product.module';
 import { UserModule } from 'src/user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { CommonModule } from 'src/common/common.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CommonModule } from 'src/common/common.module';
     CommonModule,
     CartModule,
     ProductModule,
+    NotificationModule,
     forwardRef(() => UserModule),
   ],
   providers: [OrderResolver, OrderService, OrderRepository, OrderMapper],

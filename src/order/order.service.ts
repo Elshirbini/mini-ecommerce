@@ -11,6 +11,9 @@ import { Order as MongoOrder } from './schemas/order.schema';
 import { Order as GraphQLOrder } from './graphql/order.type';
 import { ProductRepository } from 'src/product/product.repository';
 import { CartItem } from 'src/cart/schemas/cart.schema';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationChannel } from '../notification/enums/notification.enums';
+import { pubSub } from 'src/notification/pubsub';
 
 @Injectable()
 export class OrderService {
@@ -19,6 +22,7 @@ export class OrderService {
     private readonly cartRepo: CartRepository,
     private readonly userRepo: UserRepository,
     private readonly productRepo: ProductRepository,
+    private readonly notificationService: NotificationService,
     @InjectMapper()
     private readonly mapper: Mapper,
   ) {}
@@ -83,6 +87,17 @@ export class OrderService {
       isPaid: false,
       isDelivered: false,
       total: totalPrice,
+    });
+
+    await this.notificationService.send({
+      userId: userId,
+      title: 'Order Placed',
+      body: `Your order ${order._id.toString()} has been placed successfully`,
+      type: 'ORDER_PLACED',
+      channels: [
+        NotificationChannel.DATABASE,
+        NotificationChannel.GRAPHQL_PUBSUB,
+      ],
     });
 
     return this.mapper.map(order, MongoOrder, GraphQLOrder);

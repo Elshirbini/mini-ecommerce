@@ -54,8 +54,12 @@
     "graphql": "^16.14.2",
     "graphql-depth-limit": "^1.1.0",
     "graphql-query-complexity": "^2.0.0",
+    "graphql-redis-subscriptions": "^2.7.0",
+    "graphql-subscriptions": "^3.0.0",
+    "graphql-type-json": "^0.3.2",
     "graphql-upload": "^17.1.0",
-    "ioredis": "^5.8.0",
+    "graphql-ws": "^6.2.1",
+    "ioredis": "^5.11.1",
     "mime-types": "^3.0.2",
     "module-alias": "^2.3.4",
     "mongoose": "^9.9.2",
@@ -66,7 +70,8 @@
     "sanitize-html": "^2.17.7",
     "sharp": "^0.35.3",
     "winston": "^3.19.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -86,6 +91,7 @@
     "@types/redlock": "^4.0.8",
     "@types/sanitize-html": "^2.16.1",
     "@types/supertest": "^6.0.2",
+    "@types/ws": "^8.18.1",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

@@ -12,7 +12,6 @@ import { ComplexityPlugin } from './complexity.plugin';
 import { OrderService } from './order/order.service';
 // import { createOrderLoader } from './order/loaders/order.loader';
 import { RedisModule } from './redis/redis.module';
-import { winstonLogger } from './common/winston-logger';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
@@ -28,20 +27,59 @@ import { CloudflareModule } from './cloudflare/cloudflare.module';
 import { GraphQLError } from 'graphql';
 import { ProductModule } from './product/product.module';
 import { CartModule } from './cart/cart.module';
+import { NotificationModule } from './notification/notification.module';
+import { jwtPayload } from './common/interfaces/jwt-payload.interface';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       imports: [OrderModule],
-      inject: [OrderService, ConfigService],
-      useFactory: (orderService: OrderService) => ({
+      inject: [OrderService, ConfigService, JwtService],
+      useFactory: (
+        orderService: OrderService,
+        configService: ConfigService,
+        jwtService: JwtService,
+      ) => ({
         playground: false,
         allowBatchedHttpRequests: process.env.NODE_ENV === 'dev',
         introspection: true,
         persistedQueries: {},
         autoSchemaFile: join(process.cwd(), 'src', 'graphql', 'schema.gql'),
         validationRules: [depthLimit(10)], // 10 depth max limit
+        subscriptions: {
+          'graphql-ws': {
+            onConnect: async (ctx) => {
+              const authorization = ctx.connectionParams?.authorization;
+
+              if (
+                typeof authorization !== 'string' ||
+                !authorization.startsWith('Bearer ')
+              ) {
+                throw new Error('Unauthorized');
+              }
+
+              const token = authorization.slice(7);
+
+              try {
+                const payload = await jwtService.verifyAsync<jwtPayload>(
+                  token,
+                  {
+                    secret: process.env.ACCESS_TOKEN_SECRET,
+                  },
+                );
+
+                return {
+                  user: payload,
+                };
+              } catch {
+                throw new Error('Unauthorized');
+              }
+            },
+          },
+        },
+
         formatError: (formattedError, error) => {
           const originalError =
             error instanceof GraphQLError ? error.originalError : undefined;
@@ -132,6 +170,8 @@ import { CartModule } from './cart/cart.module';
     RedisModule,
     ProductModule,
     CartModule,
+    NotificationModule,
+    JwtModule.register({ global: true }),
   ],
   providers: [
     { provide: APP_GUARD, useClass: GqlThrottlerGuard },

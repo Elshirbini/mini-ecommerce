@@ -8,7 +8,23 @@ export class GqlThrottlerGuard extends ThrottlerGuard {
     const gqlCtx = GqlExecutionContext.create(context);
     const ctx = gqlCtx.getContext();
 
-    // Map the GraphQL context to the standard req/res objects
-    return { req: ctx.req, res: ctx.req.res || ctx.res };
+    return {
+      req: ctx.request,
+      res: ctx.reply,
+    };
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const gqlCtx = GqlExecutionContext.create(context);
+    const info = gqlCtx.getInfo();
+
+    // Subscriptions use WebSocket, not HTTP.
+    // Don't run the HTTP-based throttler on them.
+    if (info.operation.operation === 'subscription') {
+      return true;
+    }
+
+    // Query / Mutation → use the normal ThrottlerGuard behavior.
+    return super.canActivate(context);
   }
 }

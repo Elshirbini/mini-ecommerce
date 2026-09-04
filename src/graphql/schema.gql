@@ -53,6 +53,29 @@ type UsersResponse {
   meta: PaginationMeta!
 }
 
+type Notification {
+  _id: ID!
+  userId: ID!
+  title: String!
+  body: String!
+  data: JSONObject
+  type: String!
+  link: String
+  is_read: Boolean!
+  read_at: DateTime
+  createdAt: DateTime!
+}
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type Image {
   imageKey: String!
   imageUrl: String!
@@ -69,13 +92,28 @@ type Product {
   images: [Image!]
 }
 
+type NotificationMeta {
+  totalCount: Float!
+}
+
+type NotificationResponse {
+  notifications: [Notification!]!
+  meta: NotificationMeta!
+}
+
 type AuthPayload {
   user: User!
 }
 
 type Query {
+  getNotifications(input: QueryInput!): NotificationResponse!
   user: User!
   users(filter: UserFilterInput!): UsersResponse!
+}
+
+input QueryInput {
+  limit: Float!
+  is_read: Boolean!
 }
 
 input UserFilterInput {
@@ -89,6 +127,7 @@ type Mutation {
   makeOrder(input: MakeOrderInput): Order!
   addToCart(input: AddToCartInput!): Cart!
   addProduct(input: AddProductInput!, thumbnail: Upload, images: [Upload!]): Product!
+  markAsRead(id: String!): Notification!
   updateUser(input: UpdateUserInput, file: Upload): User!
   signup(input: SignupInput!, file: Upload): AuthPayload!
   login(input: LoginInput!): AuthPayload!
@@ -133,4 +172,8 @@ input LoginInput {
   email: String!
   password: String!
   turnstileToken: String!
+}
+
+type Subscription {
+  notificationCreated: Notification!
 }
