@@ -1,6 +1,5 @@
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { WsAuthGuard } from 'src/common/guards/ws-auth.guard';
 import { NotificationService } from './notification.service';
 import { QueryInput } from './graphql/query.input';
 import {
@@ -15,6 +14,7 @@ import { GraphQLContext } from 'src/graphql/graphql-context';
 import { NotificationResponse } from './graphql/notification-response.type';
 import { Notification } from './graphql/notification.type';
 import { pubSub } from './pubsub';
+import { SubscriptionAuthGuard } from 'src/common/guards/subscription-auth.guard';
 
 @Resolver()
 export class NotificationResolver {
@@ -35,12 +35,11 @@ export class NotificationResolver {
     return this.notificationService.markAsRead(ctx, id);
   }
 
-  @UseGuards(WsAuthGuard)
+  @UseGuards(SubscriptionAuthGuard)
   @Subscription(() => Notification, {
     name: 'notificationCreated',
   })
   notificationCreated(@Context() context: GraphQLContext) {
-    console.log('SUBSCRIPTION CONTEXT:', context);
     return pubSub.asyncIterableIterator('NOTIFICATION_CREATED');
   }
 }

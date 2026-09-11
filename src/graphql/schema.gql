@@ -92,6 +92,17 @@ type Product {
   images: [Image!]
 }
 
+type PresignedUrlResponse {
+  url: String!
+  key: String!
+  headers: JSON!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
 type NotificationMeta {
   totalCount: Float!
 }
@@ -127,6 +138,7 @@ type Mutation {
   makeOrder(input: MakeOrderInput): Order!
   addToCart(input: AddToCartInput!): Cart!
   addProduct(input: AddProductInput!, thumbnail: Upload, images: [Upload!]): Product!
+  generatePresignedUrl(input: GeneratePresignedUrlInput!): PresignedUrlResponse!
   markAsRead(id: String!): Notification!
   updateUser(input: UpdateUserInput, file: Upload): User!
   signup(input: SignupInput!, file: Upload): AuthPayload!
@@ -157,6 +169,13 @@ input AddProductInput {
 
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
+
+input GeneratePresignedUrlInput {
+  key: String!
+  mimetype: String!
+  expiresIn: Int!
+  metaData: JSON
+}
 
 input UpdateUserInput {
   name: String

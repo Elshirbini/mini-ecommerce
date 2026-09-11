@@ -16,6 +16,7 @@ import { r2Config } from './cloudflare.config';
 import { DiskStorageFile } from '@blazity/nest-file-fastify';
 import fs from 'fs';
 import { extension } from 'mime-types';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
 export class CloudflareService {
@@ -26,6 +27,8 @@ export class CloudflareService {
     endpoint: r2Config.endpoint,
     credentials: r2Config.credentials,
     forcePathStyle: true,
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
 
   async uploadFileS3(
@@ -60,6 +63,63 @@ export class CloudflareService {
       this.logger.error(error);
       throw new InternalServerErrorException('Error in uploading file');
     }
+  }
+
+  /**
+   * Generates a presigned URL for direct client-side uploads to R2.
+   *
+   * Metadata values are baked into the SigV4 signature at generation time.
+   * The client MUST send the returned `headers` verbatim (exact keys + exact
+   * values) alongside the PUT request.
+   */
+  async generatePresignedUrl(
+    key: string,
+    mimetype: string,
+    expiresIn: number,
+    metadata: Record<string, string>,
+  ) {
+    const ext = extension(mimetype) || 'bin';
+    const fileKey = `${key}.${ext}`;
+
+    // Normalise keys to lowercase — SigV4 lowercases header names internally.
+    const normalisedMetadata: Record<string, string> = Object.fromEntries(
+      Object.entries(metadata).map(([k, v]) => [k.toLowerCase(), v]),
+    );
+
+    const metadataHeaderNames = new Set(
+      Object.keys(normalisedMetadata).map((k) => `x-amz-meta-${k}`),
+    );
+
+    const signableHeaders = new Set(['content-type', ...metadataHeaderNames]);
+
+    const command = new PutObjectCommand({
+      Bucket: r2Config.bucket,
+      Key: fileKey,
+      ContentType: mimetype,
+      Metadata: normalisedMetadata,
+    });
+
+    const uploadUrl = await getSignedUrl(this.s3, command, {
+      expiresIn,
+      unhoistableHeaders: metadataHeaderNames,
+      signableHeaders,
+    });
+
+    const uploadHeaders: Record<string, string> = {
+      'content-type': mimetype,
+      ...Object.fromEntries(
+        Object.entries(normalisedMetadata).map(([k, v]) => [
+          `x-amz-meta-${k}`,
+          v,
+        ]),
+      ),
+    };
+
+    return {
+      url: uploadUrl,
+      key: fileKey,
+      headers: uploadHeaders,
+    };
   }
 
   async uploadFromDisk(file: DiskStorageFile, key: string) {
